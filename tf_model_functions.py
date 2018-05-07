@@ -36,12 +36,12 @@ def erprint(in_text):
     sys.stderr.write(in_text+'\n')
 
 
-def read_and_decode(filename_queue):
+def read_and_decode(filename_queue, dtype = tf.float32):
     reader = tf.TFRecordReader()
 
     _, serialized_example = reader.read(filename_queue)
 
-    image = decode(serialized_example)
+    image = decode(serialized_example, dtype=dtype)
 
     return {'image': image}
 
