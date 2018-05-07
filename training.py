@@ -9,8 +9,8 @@ import yaml
 from tf_model_functions import *
 
 parser = argparse.ArgumentParser(description='Train CNN for classification of variant selection.')
-parser.add_argument('training_data', type=str, help='Directory containing training data in tfrecords format.')
-parser.add_argument('checkpoint_dir', type=str, help='Directory where model checkpoints will be saved.')
+parser.add_argument('--training_data', type=str, help='Directory containing training data in tfrecords format.')
+parser.add_argument('--checkpoint_dir', type=str, help='Directory where model checkpoints will be saved.')
 parser.add_argument('--epochs', '-e', default=20, type=int, help='Training epochs.')
 parser.add_argument('--dropout_frequency', '-d', default=0.50, type=float,
                     help='Set frequency for dropout normalization during training.')
