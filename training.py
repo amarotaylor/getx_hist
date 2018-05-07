@@ -75,14 +75,16 @@ def run_training(args):
                                       trainable=False)
         optimizer = tf.train.AdamOptimizer(learning_rate=adam_lr, epsilon=adam_ep)
         tower_grads = []
-        with tf.variable_scope(tf.get_variable_scope()):
+        with tf.variable_scope("autoencoder", reuse=True):
+
             for index in xrange(args.num_gpus):
                 with tf.device('/gpu:{}'.format(index)):
                     with tf.name_scope('tower_{}'.format(index)) as scope:
                         image_batch, target_batch = batch_queue.dequeue()
                         sd, mn, decoded = inference(image_batch, nn_arch,
-                                           dtype=set_dtype, training=True)
-                        loss_op = tf.reduce_mean(img_loss(y_hat=decoded,targets_flat=target_batch) + kl_loss(sd=sd,mn=mn))
+                                                    dtype=set_dtype, training=True)
+                        loss_op = tf.reduce_mean(
+                            img_loss(y_hat=decoded, targets_flat=target_batch) + kl_loss(sd=sd, mn=mn))
                         tf.get_variable_scope().reuse_variables()
                         summaries = tf.get_collection(tf.GraphKeys.SUMMARIES, scope)
                         grads = optimizer.compute_gradients(loss_op)
