@@ -247,8 +247,8 @@ class layer_maker:
             out_chn = l_info['filters']
             out_width = int(math.ceil( self.in_width / float(l_info['stride'])))
         elif l_info['type'] == 'fc':
-
-            layer = self.fully_connected(self.in_tensor, l_info['units'], name = layer_name,
+            with tf.name_scope(layer_id):
+                layer = self.fully_connected(self.in_tensor, l_info['units'], name = layer_name,
                                          activation = tf.nn.leaky_relu)
             out_chn = l_info['units']
             out_width = 1
