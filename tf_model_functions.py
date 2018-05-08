@@ -215,7 +215,7 @@ class layer_maker:
         data_format = self.dformat
 
         if l_info['type'] == 'variational':
-            with tf._variable_scope(layer_id, reuse=tf.AUTO_REUSE):
+            with tf.variable_scope(layer_id, reuse=tf.AUTO_REUSE):
                 self.mn = tf.layers.dense(self.in_tensor, units=self.hidden, activation=tf.nn.leaky_relu, name='encode_mean')
                 self.sd = 0.5 * tf.layers.dense(self.in_tensor, units=self.hidden, activation=tf.nn.leaky_relu, name='encode_sd')
                 layer = self.sampling(self.mn, self.sd)
