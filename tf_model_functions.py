@@ -199,8 +199,9 @@ class layer_maker:
 
     def fully_connected(self,x, u, name, activation = tf.nn.leaky_relu):
         ''' wrapper for tf.layers.dense'''
+
         layer = tf.layers.dense(x, units = u,activation = activation,
-                                 name=name)
+                                 name=name, reuse=True)
         return layer
 
     def sampling(self,z_mean, z_log_var):
