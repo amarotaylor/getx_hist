@@ -69,7 +69,7 @@ def run_training(args):
                              dtype=set_dtype)
         images,flat_target = input_pipes
         batch_queue = tf.contrib.slim.prefetch_queue.prefetch_queue(
-            images, capacity=2 * args.batch_size * args.num_gpus)
+            images['image'], capacity=2 * args.batch_size * args.num_gpus)
         global_step = tf.get_variable(name='global_step', shape=[],
                                       initializer=tf.constant_initializer(0),
                                       trainable=False)
