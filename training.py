@@ -81,7 +81,7 @@ def run_training(args):
                 with tf.device('/gpu:{}'.format(index)):
                     with tf.name_scope('tower_{}'.format(index)) as scope:
                         image_batch, target_batch = batch_queue.dequeue()
-                        sd, mn, decoded = inference(image_batch, nn_arch,
+                        sd, mn, decoded = inference(image_batch, nn_arch,batch_size=args.batch_size,
                                                     dtype=set_dtype, training=True)
                         loss_op = tf.reduce_mean(
                             img_loss(y_hat=decoded, targets_flat=target_batch) + kl_loss(sd=sd, mn=mn))

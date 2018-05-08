@@ -177,7 +177,7 @@ class layer_maker:
         self.dtype = dtype
         self.dformat = dformat
         self.hidden = hidden
-
+        self.batch_size = batch_size
     def conv2d(self,x, f, k, name, stride=1, padding='same', format='channels_last',activation = tf.nn.leaky_relu):
         ''' wrapper for tf.layers.conv2d'''
         layer = tf.layers.conv2d(x, filters=f, kernel_size=k, strides=stride, padding=padding,
@@ -206,7 +206,7 @@ class layer_maker:
         return layer
 
     def sampling(self,z_mean, z_log_var):
-        epsilon = tf.random_normal([self.hidden,1], 0, 1,
+        epsilon = tf.random_normal([self.batch_size,self.hidden], 0, 1,
                                dtype=tf.float32)
         return tf.add(z_mean, tf.multiply(tf.sqrt(tf.exp(z_log_var)), epsilon))
 
@@ -281,13 +281,13 @@ class layer_maker:
         self.Ops[l_index] = layer
 
 
-def inference(images, nn_architecture, dtype=tf.float32, training=True):
+def inference(images, nn_architecture,batch_size, dtype=tf.float32, training=True):
     #print images.shape
     in_tensor = images
     in_chn = 3
     in_width = 100
     #print in_tensor.shape
-    builder = layer_maker(in_tensor, in_chn, in_width, dtype=dtype, training=training)
+    builder = layer_maker(in_tensor, in_chn, in_width, dtype=dtype, training=training, batch_size = batch_size)
     with tf.name_scope("autoencoder"):
         for layer_index in range(len(nn_architecture.keys())):
             l_info = nn_architecture['layer{}'.format(layer_index)]
