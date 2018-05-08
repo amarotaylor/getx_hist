@@ -231,7 +231,7 @@ class layer_maker:
                 l_info['stride']
             except KeyError:
                 l_info['stride'] = 1
-            with tf._variable_scope(layer_id,reuse=tf.AUTO_REUSE):
+            with tf.variable_scope(layer_id,reuse=tf.AUTO_REUSE):
                 layer = self.conv2d(x = self.in_tensor, f= l_info['filters'], k = l_info['kernel_size'],
                                 name = layer_id, stride=l_info['stride'])
             out_chn = l_info['filters']
