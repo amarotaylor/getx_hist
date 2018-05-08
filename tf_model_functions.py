@@ -168,7 +168,7 @@ def kl_loss(sd,mn):
                                            - tf.exp(sd), 1)
 
 class layer_maker:
-    def __init__(self,in_tensor,in_chn,in_width,dtype=tf.float32,training=True,dformat='channels_last', hidden = 1000):
+    def __init__(self,in_tensor,in_chn,in_width,batch_size,dtype=tf.float32,training=True,dformat='channels_last', hidden = 1000):
         self.Ops = {}
         self.in_tensor = in_tensor
         self.in_chn = in_chn
