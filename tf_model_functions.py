@@ -208,7 +208,7 @@ class layer_maker:
     def sampling(self,z_mean, z_log_var):
         epsilon = tf.random_normal([self.hidden,1], 0, 1,
                                dtype=tf.float32)
-        return tf.add(z_mean, tf.mul(tf.sqrt(tf.exp(z_log_var)), epsilon))
+        return tf.add(z_mean, tf.multiply(tf.sqrt(tf.exp(z_log_var)), epsilon))
 
     def make_layer(self,l_info,l_index,last=False):
         ''' uses YAML file to generate layers '''
