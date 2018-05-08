@@ -158,7 +158,7 @@ def training(loss, learning_rate):
 # y_hat and targets_flat should be batch_size x (length*width*channels)
 def img_loss(y_hat, targets_flat,scale_factor = 100*100*3):
     with tf.name_scope('image_loss'):
-        return tf.divide(tf.reduce_sum(tf.squared_difference(y_hat, targets_flat), 1), scale_factor)
+        return -tf.divide(1+tf.reduce_sum(tf.squared_difference(y_hat, targets_flat), 1), scale_factor)
 
 # kl divergence from standard normal
 def kl_loss(sd,mn):
