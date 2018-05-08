@@ -26,6 +26,7 @@ parser.add_argument('--collect_run_metadata', '-m', action='store_true',
 parser.add_argument('--nn_architecture', '-nn_a', type=str, help="YAML file containing nn_architecture specs.")
 parser.add_argument('--learning_rate',default=0.01, type=float)
 parser.add_argument('--epsilon',default = 1e-8, type = float)
+parser.add_argument('--variational', default = False, help='if variational true use KL divergence + reconstruction loss')
 args = parser.parse_args()
 
 
@@ -81,10 +82,16 @@ def run_training(args):
                 with tf.device('/gpu:{}'.format(index)):
                     with tf.name_scope('tower_{}'.format(index)) as scope:
                         image_batch, target_batch = batch_queue.dequeue()
-                        sd, mn, decoded = inference(image_batch, nn_arch,batch_size=args.batch_size,
+
+                        if args.variational == True:
+                            sd, mn, decoded = inference(image_batch, nn_arch,batch_size=args.batch_size,
                                                     dtype=set_dtype, training=True)
-                        loss_op = tf.reduce_mean(
-                            img_loss(y_hat=decoded, targets_flat=target_batch) + kl_loss(sd=sd, mn=mn))
+                            loss_op = tf.reduce_mean(
+                                img_loss(y_hat=decoded, targets_flat=target_batch) + kl_loss(sd=sd, mn=mn))
+                        else:
+                            _,_,decoded = inference(image_batch, nn_arch, batch_size=args.batch_size,
+                                                dtype=set_dtype, training=True)
+                            loss_op = img_loss(y_hat = decoded, targets_flat=target_batch)
                         summaries = tf.get_collection(tf.GraphKeys.SUMMARIES, scope)
                         grads = optimizer.compute_gradients(loss_op)
                         tower_grads.append(grads)
