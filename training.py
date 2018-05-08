@@ -92,7 +92,11 @@ def run_training(args):
                             _,_,decoded = inference(image_batch, nn_arch, batch_size=args.batch_size,
                                                 dtype=set_dtype, training=True)
                             loss_op = img_loss(y_hat = decoded, targets_flat=target_batch)
-                        tf.summary.image("reconstruction", tf.reshape(decoded[0,:],[-1,100,100,3]))
+                        for i in xrange(0,9):
+                            tf.summary.image("reconstruction_{}".format(i), tf.reshape(decoded[i,:],[-1,100,100,3]))
+                        for i in xrange(0, 9):
+                            tf.summary.image("source_{}".format(i),
+                                             tf.reshape(target_batch[i, :], [-1, 100, 100, 3]))
                         variable_summaries(loss_op)
                         summaries = tf.get_collection(tf.GraphKeys.SUMMARIES, scope)
                         grads = optimizer.compute_gradients(loss_op)
