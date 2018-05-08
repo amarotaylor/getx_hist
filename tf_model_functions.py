@@ -267,7 +267,7 @@ class layer_maker:
                 out_chn = self.in_width * self.in_width * self.in_chn
                 out_width = 1
 
-                layer = tf.reshape(self.in_tensor, shape=[-1, out_chn], name=layer_name)
+                layer = tf.reshape(self.in_tensor, shape=[-1, out_chn], name=layer_id)
 
         elif l_info['type'] == 'maxpool':
             try:
@@ -275,8 +275,8 @@ class layer_maker:
             except KeyError:
                 l_info['stride'] = 1
 
-            with tf.name_scope(layer_id,reuse=tf.AUTO_REUSE):
-                layer = self.max_pool_2d(self.in_tensor,p = l_info['pool'], name=layer_name,
+            with tf._variable_scope(layer_id,reuse=tf.AUTO_REUSE):
+                layer = self.max_pool_2d(self.in_tensor,p = l_info['pool'], name=layer_id,
                                     stride=l_info['stride'], format='channels_last', padding='same')
                 out_width = int(math.ceil( (self.in_width - float(l_info['pool']) / float(l_info['stride'])))) + 1
                 out_chn = self.in_chn
