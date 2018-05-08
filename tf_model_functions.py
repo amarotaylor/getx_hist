@@ -163,7 +163,9 @@ def img_loss(y_hat, targets_flat,scale_factor = 100*100*3):
 # kl divergence from standard normal
 def kl_loss(sd,mn):
     with tf.name_scope('kl_loss'):
-        return -0.5 * K.sum(1 + sd - K.square(mn) - K.exp(sd), axis=-1)
+        return -0.5 * tf.reduce_sum(1 + sd
+                                           - tf.square(mn)
+                                           - tf.exp(sd), 1)
 
 class layer_maker:
     def __init__(self,in_tensor,in_chn,in_width,dtype=tf.float32,training=True,dformat='channels_last', hidden = 1000):
@@ -204,9 +206,9 @@ class layer_maker:
         return layer
 
     def sampling(self,z_mean, z_log_var):
-        epsilon = K.random_normal(shape=(K.shape(z_mean)[0], self.hidden), mean=0.,
-                                  stddev=1.)
-        return z_mean + K.exp(z_log_var / 2) * epsilon
+        epsilon = tf.random_normal([self.hidden,1], 0, 1,
+                               dtype=tf.float32)
+        return tf.add(z_mean, tf.mul(tf.sqrt(tf.exp(z_log_var)), epsilon))
 
     def make_layer(self,l_info,l_index,last=False):
         ''' uses YAML file to generate layers '''
@@ -216,8 +218,8 @@ class layer_maker:
 
         if l_info['type'] == 'variational':
             with tf.variable_scope(layer_id, reuse=tf.AUTO_REUSE):
-                self.mn = tf.layers.dense(self.in_tensor, units=self.hidden, activation=tf.nn.leaky_relu, name='encode_mean')
-                self.sd = 0.5 * tf.layers.dense(self.in_tensor, units=self.hidden, activation=tf.nn.leaky_relu, name='encode_sd')
+                self.mn = tf.layers.dense(self.in_tensor, units=self.hidden, activation=tf.nn.relu, name='encode_mean')
+                self.sd = tf.layers.dense(self.in_tensor, units=self.hidden, activation=tf.nn.relu, name='encode_sd')
                 layer = self.sampling(self.mn, self.sd)
                 out_chn = self.hidden
                 out_width = 1

@@ -14,7 +14,7 @@ parser.add_argument('--checkpoint_dir', type=str, help='Directory where model ch
 parser.add_argument('--epochs', '-e', default=20, type=int, help='Training epochs.')
 parser.add_argument('--dropout_frequency', '-d', default=0.50, type=float,
                     help='Set frequency for dropout normalization during training.')
-parser.add_argument('--batch_size', '-b', default=2000, type=int, help='Batch size for training.')
+parser.add_argument('--batch_size', '-b', default=200, type=int, help='Batch size for training.')
 parser.add_argument('--input_threads', '-p', default=2, type=int,
                     help='Number of input threads to use (must be 2 or more).')
 parser.add_argument('--num_gpus', '-g', default=2, type=int, help='specify number of GPUs to use.')
