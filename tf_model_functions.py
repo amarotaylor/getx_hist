@@ -91,7 +91,7 @@ def inputs(file_regex, batch_size, num_epochs, num_threads=2, shuffle=True, dtyp
                 num_threads=num_threads,
                 capacity=capacity,
                 allow_smaller_final_batch=True)
-        flat_targets = tf.reshape(images,[-1,100*100*3])
+        flat_targets = tf.reshape(images['image'],[-1,100*100*3])
         return images, flat_targets
 
 
