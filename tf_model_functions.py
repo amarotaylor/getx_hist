@@ -247,14 +247,14 @@ class layer_maker:
             out_chn = l_info['filters']
             out_width = int(math.ceil( self.in_width / float(l_info['stride'])))
         elif l_info['type'] == 'fc':
-            with tf.name_scope(layer_id, reuse=tf.AUTO_REUSE):
+            with tf.variable_scope(layer_id, reuse=tf.AUTO_REUSE):
                 layer = self.fully_connected(self.in_tensor, l_info['units'], name = layer_name,
                                          activation = tf.nn.leaky_relu)
             out_chn = l_info['units']
             out_width = 1
         elif l_info['type'] == 'flatten':
 
-            with tf.name_scope(layer_id, reuse=tf.AUTO_REUSE):
+            with tf.variable_scope(layer_id, reuse=tf.AUTO_REUSE):
 
                 out_chn = self.in_width * self.in_chn
                 out_width = 1
