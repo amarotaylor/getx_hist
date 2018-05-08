@@ -241,6 +241,7 @@ class layer_maker:
             with tf.variable_scope(layer_id,reuse=tf.AUTO_REUSE):
                 layer = self.conv2d(x = self.in_tensor, f= l_info['filters'], k = l_info['kernel_size'],
                                 name = layer_id, stride=l_info['stride'])
+                print layer.output_shape()
             out_chn = l_info['filters']
             out_width = self.in_width
 
@@ -252,6 +253,7 @@ class layer_maker:
             with tf.variable_scope(layer_id,reuse=tf.AUTO_REUSE):
                 layer = self.deconv2d(self.in_tensor,f = l_info['filters'],
                                     k = l_info['kernel_size'],name=layer_id, stride=l_info['stride'],padding='same')
+                print layer.output_shape()
             out_chn = l_info['filters']
             out_width = int(math.ceil( self.in_width / float(l_info['stride'])))
         elif l_info['type'] == 'fc':
@@ -278,6 +280,7 @@ class layer_maker:
             with tf.variable_scope(layer_id,reuse=tf.AUTO_REUSE):
                 layer = self.max_pool_2d(self.in_tensor,p = l_info['pool'], name=layer_id,
                                     stride=l_info['stride'], format='channels_last', padding='same')
+                print layer.output_shape()
                 out_width = int(math.ceil( (self.in_width - float(l_info['pool']) / float(l_info['stride'])))) + 1
                 out_chn = self.in_chn
         self.in_tensor = layer
