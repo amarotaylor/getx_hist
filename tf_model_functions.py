@@ -257,7 +257,7 @@ class layer_maker:
 
             with tf.variable_scope(layer_id, reuse=tf.AUTO_REUSE):
 
-                out_chn = self.in_width * self.in_chn
+                out_chn = self.in_width * self.in_width * self.in_chn
                 out_width = 1
 
                 layer = tf.reshape(self.in_tensor, shape=[-1, out_chn], name=layer_name)
