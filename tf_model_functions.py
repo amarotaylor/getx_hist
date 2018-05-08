@@ -181,7 +181,7 @@ class layer_maker:
         self.hidden = hidden
         self.batch_size = batch_size
         self.mn = []
-        self.std = []
+        self.sd = []
 
     def conv2d(self,x, f, k, name, stride=1, padding='same', format='channels_last',activation = tf.nn.leaky_relu):
         ''' wrapper for tf.layers.conv2d'''
