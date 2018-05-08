@@ -215,15 +215,16 @@ class layer_maker:
         data_format = self.dformat
 
         if l_info['type'] == 'variational':
-            self.mn = tf.layers.dense(self.in_tensor, units=self.hidden, activation=tf.nn.leaky_relu, name='encode_mean')
-            self.sd = 0.5 * tf.layers.dense(self.in_tensor, units=self.hidden, activation=tf.nn.leaky_relu, name='encode_sd')
-            layer = self.sampling(self.mn, self.sd)
-            out_chn = self.hidden
-            out_width = 1
-            variable_summaries(self.mn)
-            variable_summaries(self.sd)
+            with tf._variable_scope(layer_id, reuse=tf.AUTO_REUSE):
+                self.mn = tf.layers.dense(self.in_tensor, units=self.hidden, activation=tf.nn.leaky_relu, name='encode_mean')
+                self.sd = 0.5 * tf.layers.dense(self.in_tensor, units=self.hidden, activation=tf.nn.leaky_relu, name='encode_sd')
+                layer = self.sampling(self.mn, self.sd)
+                out_chn = self.hidden
+                out_width = 1
+                variable_summaries(self.mn)
+                variable_summaries(self.sd)
 
-        assert l_info['type'] in ['conv','incept','deconv','fc','dropout','flatten','maxpool']
+        assert l_info['type'] in ['conv','incept','deconv','fc','dropout','flatten','maxpool', 'variational']
 
         if l_info['type'] == 'conv':
             try:
@@ -243,12 +244,12 @@ class layer_maker:
                 l_info['stride'] = 1
             with tf.variable_scope(layer_id,reuse=tf.AUTO_REUSE):
                 layer = self.deconv2d(self.in_tensor,f = l_info['filters'],
-                                    k = l_info['kernel_size'],name=layer_name, stride=l_info['stride'],padding='same')
+                                    k = l_info['kernel_size'],name=layer_id, stride=l_info['stride'],padding='same')
             out_chn = l_info['filters']
             out_width = int(math.ceil( self.in_width / float(l_info['stride'])))
         elif l_info['type'] == 'fc':
             with tf.variable_scope(layer_id, reuse=tf.AUTO_REUSE):
-                layer = self.fully_connected(self.in_tensor, l_info['units'], name = layer_name,
+                layer = self.fully_connected(self.in_tensor, l_info['units'], name = layer_id,
                                          activation = tf.nn.leaky_relu)
             out_chn = l_info['units']
             out_width = 1
