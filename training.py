@@ -92,6 +92,8 @@ def run_training(args):
                             _,_,decoded = inference(image_batch, nn_arch, batch_size=args.batch_size,
                                                 dtype=set_dtype, training=True)
                             loss_op = img_loss(y_hat = decoded, targets_flat=target_batch)
+                        tf.summary.image("reconstruction", tf.reshape(decoded[0,:],[-1,100,100,3]))
+                        variable_summaries(loss_op)
                         summaries = tf.get_collection(tf.GraphKeys.SUMMARIES, scope)
                         grads = optimizer.compute_gradients(loss_op)
                         tower_grads.append(grads)
@@ -137,6 +139,7 @@ def run_training(args):
                         _, loss_value, summary, step = sess.run([train_op, loss_op, summary_op, global_step]  # ,
                                                                 # feed_dict={keep_prob: args.dropout_frequency}
                                                                 )
+
                         duration = time.time() - start_time
                         summary_writer.add_summary(summary, step)
                         sys.stderr.write("Step {}: loss = {} ({} sec)\n".format((step + 1),
