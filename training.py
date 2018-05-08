@@ -75,7 +75,7 @@ def run_training(args):
                                       trainable=False)
         optimizer = tf.train.AdamOptimizer(learning_rate=adam_lr, epsilon=adam_ep)
         tower_grads = []
-        with tf.variable_scope("autoencoder", reuse=True):
+        with tf.variable_scope("autoencoder", reuse = tf.AUTO_REUSE):
 
             for index in xrange(args.num_gpus):
                 with tf.device('/gpu:{}'.format(index)):

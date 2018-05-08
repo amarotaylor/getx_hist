@@ -199,7 +199,6 @@ class layer_maker:
 
     def fully_connected(self,x, u, name, activation = tf.nn.leaky_relu):
         ''' wrapper for tf.layers.dense'''
-
         layer = tf.layers.dense(x, units = u,activation = activation,
                                  name=name, reuse=True)
         return layer
@@ -286,7 +285,8 @@ def inference(images, nn_architecture, dtype=tf.float32, training=True):
     in_width = 100
     #print in_tensor.shape
     builder = layer_maker(in_tensor, in_chn, in_width, dtype=dtype, training=training)
-    for layer_index in range(len(nn_architecture.keys())):
-        l_info = nn_architecture['layer{}'.format(layer_index)]
-        builder.make_layer(l_info,layer_index)
-    return builder.sd,builder.mn,builder.in_tensor
+    with tf.variable_scope("autoencoder", reuse = tf.AUTO_REUSE):
+        for layer_index in range(len(nn_architecture.keys())):
+            l_info = nn_architecture['layer{}'.format(layer_index)]
+            builder.make_layer(l_info,layer_index)
+        return builder.sd,builder.mn,builder.in_tensor
