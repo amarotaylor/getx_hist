@@ -85,7 +85,6 @@ def run_training(args):
                                                     dtype=set_dtype, training=True)
                         loss_op = tf.reduce_mean(
                             img_loss(y_hat=decoded, targets_flat=target_batch) + kl_loss(sd=sd, mn=mn))
-                        tf.get_variable_scope().reuse_variables()
                         summaries = tf.get_collection(tf.GraphKeys.SUMMARIES, scope)
                         grads = optimizer.compute_gradients(loss_op)
                         tower_grads.append(grads)

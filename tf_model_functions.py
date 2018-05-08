@@ -200,7 +200,7 @@ class layer_maker:
     def fully_connected(self,x, u, name, activation = tf.nn.leaky_relu):
         ''' wrapper for tf.layers.dense'''
         layer = tf.layers.dense(x, units = u,activation = activation,
-                                 name=name, reuse=True)
+                                 name=name)
         return layer
 
     def sampling(self,z_mean, z_log_var):
@@ -230,9 +230,9 @@ class layer_maker:
                 l_info['stride']
             except KeyError:
                 l_info['stride'] = 1
-            with tf.name_scope(layer_id,reuse=tf.AUTO_REUSE):
+            with tf._variable_scope(layer_id,reuse=tf.AUTO_REUSE):
                 layer = self.conv2d(x = self.in_tensor, f= l_info['filters'], k = l_info['kernel_size'],
-                                name = layer_name, stride=l_info['stride'])
+                                name = layer_id, stride=l_info['stride'])
             out_chn = l_info['filters']
             out_width = self.in_width
 
@@ -241,7 +241,7 @@ class layer_maker:
                 l_info['stride']
             except KeyError:
                 l_info['stride'] = 1
-            with tf.name_scope(layer_id,reuse=tf.AUTO_REUSE):
+            with tf.variable_scope(layer_id,reuse=tf.AUTO_REUSE):
                 layer = self.deconv2d(self.in_tensor,f = l_info['filters'],
                                     k = l_info['kernel_size'],name=layer_name, stride=l_info['stride'],padding='same')
             out_chn = l_info['filters']
@@ -285,7 +285,7 @@ def inference(images, nn_architecture, dtype=tf.float32, training=True):
     in_width = 100
     #print in_tensor.shape
     builder = layer_maker(in_tensor, in_chn, in_width, dtype=dtype, training=training)
-    with tf.variable_scope("autoencoder", reuse = tf.AUTO_REUSE):
+    with tf.name_scope("autoencoder"):
         for layer_index in range(len(nn_architecture.keys())):
             l_info = nn_architecture['layer{}'.format(layer_index)]
             builder.make_layer(l_info,layer_index)
