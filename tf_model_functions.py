@@ -182,7 +182,7 @@ class layer_maker:
         self.batch_size = batch_size
         self.mn = []
         self.sd = []
-
+        self.encoded = []
     def conv2d(self,x, f, k, name, stride=1, padding='same', format='channels_last',activation = tf.nn.leaky_relu):
         ''' wrapper for tf.layers.conv2d'''
         layer = tf.layers.conv2d(x, filters=f, kernel_size=k, strides=stride, padding=padding,
@@ -279,7 +279,12 @@ class layer_maker:
         self.in_chn = out_chn
         self.in_width = layer.get_shape()[1]
         self.Ops[l_index] = layer
-
+        print layer.get_shape()
+        try:
+            if l_info['flag'] == 'encoded':
+                self.encoded = layer
+        except KeyError:
+                pass
 
 def inference(images, nn_architecture,batch_size, dtype=tf.float32, training=True, latent_params = None):
     #print images.shape
@@ -292,4 +297,4 @@ def inference(images, nn_architecture,batch_size, dtype=tf.float32, training=Tru
         for layer_index in range(len(nn_architecture.keys())):
             l_info = nn_architecture['layer{}'.format(layer_index)]
             builder.make_layer(l_info,layer_index)
-        return builder.sd,builder.mn,builder.in_tensor
+        return builder.sd,builder.mn,builder.in_tensor,builder.encoded

@@ -86,12 +86,12 @@ def run_training(args):
                         image_batch, target_batch = batch_queue.dequeue()
 
                         if args.variational == True:
-                            sd, mn, decoded = inference(image_batch, nn_arch,batch_size=args.batch_size,
+                            sd, mn, decoded,_ = inference(image_batch, nn_arch,batch_size=args.batch_size,
                                                     dtype=set_dtype, training=True, latent_params = args.variational_hidden_units)
                             loss_op = tf.reduce_mean(
                                 img_loss(y_hat=decoded, targets_flat=target_batch) + kl_loss(sd=sd, mn=mn))
                         else:
-                            _,_,decoded = inference(image_batch, nn_arch, batch_size=args.batch_size,
+                            _,_,decoded,_ = inference(image_batch, nn_arch, batch_size=args.batch_size,
                                                 dtype=set_dtype, training=True)
                             loss_op = img_loss(y_hat = decoded, targets_flat=target_batch)
                         for i in xrange(0,4):
