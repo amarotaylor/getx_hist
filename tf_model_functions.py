@@ -281,13 +281,13 @@ class layer_maker:
         self.Ops[l_index] = layer
 
 
-def inference(images, nn_architecture,batch_size, dtype=tf.float32, training=True):
+def inference(images, nn_architecture,batch_size, dtype=tf.float32, training=True, latent_params = None):
     #print images.shape
     in_tensor = images
     in_chn = 3
     in_width = 100
     #print in_tensor.shape
-    builder = layer_maker(in_tensor, in_chn, in_width, dtype=dtype, training=training, batch_size = batch_size)
+    builder = layer_maker(in_tensor, in_chn, in_width, dtype=dtype, training=training, batch_size = batch_size, hidden=latent_params)
     with tf.name_scope("autoencoder"):
         for layer_index in range(len(nn_architecture.keys())):
             l_info = nn_architecture['layer{}'.format(layer_index)]

@@ -27,6 +27,8 @@ parser.add_argument('--nn_architecture', '-nn_a', type=str, help="YAML file cont
 parser.add_argument('--learning_rate',default=0.01, type=float)
 parser.add_argument('--epsilon',default = 1e-8, type = float)
 parser.add_argument('--variational', default = False, help='if variational true use KL divergence + reconstruction loss')
+parser.add_argument('--variational_hidden_units', default=100, help='number of variational parameters')
+
 args = parser.parse_args()
 
 
@@ -85,16 +87,15 @@ def run_training(args):
 
                         if args.variational == True:
                             sd, mn, decoded = inference(image_batch, nn_arch,batch_size=args.batch_size,
-                                                    dtype=set_dtype, training=True)
+                                                    dtype=set_dtype, training=True, latent_params = args.variational_hidden_units)
                             loss_op = tf.reduce_mean(
                                 img_loss(y_hat=decoded, targets_flat=target_batch) + kl_loss(sd=sd, mn=mn))
                         else:
                             _,_,decoded = inference(image_batch, nn_arch, batch_size=args.batch_size,
                                                 dtype=set_dtype, training=True)
                             loss_op = img_loss(y_hat = decoded, targets_flat=target_batch)
-                        for i in xrange(0,9):
+                        for i in xrange(0,4):
                             tf.summary.image("reconstruction_{}".format(i), tf.reshape(decoded[i,:],[-1,100,100,3]))
-                        for i in xrange(0, 9):
                             tf.summary.image("source_{}".format(i),
                                              tf.reshape(target_batch[i, :], [-1, 100, 100, 3]))
                         variable_summaries(loss_op)
