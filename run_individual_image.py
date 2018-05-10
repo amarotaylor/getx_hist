@@ -92,7 +92,7 @@ def evaluate_image(args):
                            tf.local_variables_initializer())
         vars_to_restore = tf.contrib.slim.get_variables_to_restore()
         saver = tf.train.Saver(vars_to_restore, keep_checkpoint_every_n_hours=2, max_to_keep=8)
-        encoded_arrays =[]
+        encoded_arrays =list()
         with tf.Session(config=tf.ConfigProto(allow_soft_placement=True)) as sess:
             sess.run(init_op)
             coord = tf.train.Coordinator()
@@ -101,22 +101,21 @@ def evaluate_image(args):
                 sys.stderr.write("Restoring Checkpoint\n")
                 restore_checkpoint(sess, saver, args.checkpoint_dir)
             try:
+                incr = 0
+                step = 0
                 while not coord.should_stop():
-                    incr = 0
-                    step = 0
+
+                    incr += 1
                     encoded_im = sess.run([encoded,global_step]  # ,
                                                                 # feed_dict={keep_prob: args.dropout_frequency}
                                                             )
-                if len(encoded_arrays)> 1:
-                    encoded_arrays = np.concatenate([np.asarray(encoded_im),encoded_arrays])
-                else:
-                    encoded_arrays = np.asarray(encoded_im)
-
+                    encoded_arrays.append(np.asarray(encoded_im))
+                np.save('{}_.npy'.format(args.image), encoded_arrays)
             except tf.errors.OutOfRangeError:
                 sys.stderr.write('Done')
             finally:
                 coord.request_stop()
-            np.save('{}.npy'.format(args.image), encoded_arrays)
+            np.save('{}_.npy'.format(args.image), encoded_arrays)
             coord.join(threads)
 
 
