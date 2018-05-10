@@ -26,6 +26,8 @@ parser.add_argument('--epsilon',default = 1e-8, type = float)
 parser.add_argument('--variational', default = False, help='if variational true use KL divergence + reconstruction loss')
 parser.add_argument('--variational_hidden_units', default=100, help='number of variational parameters')
 parser.add_argument('--image', default = None, help='image to generate encodings')
+parser.add_argument('--image_name', default = None, help='image to generate encodings')
+
 
 args = parser.parse_args()
 
@@ -104,18 +106,19 @@ def evaluate_image(args):
                 incr = 0
                 step = 0
                 while not coord.should_stop():
-
+                    if np.mod(incr,500) == 0:
+                        print incr
                     incr += 1
                     encoded_im = sess.run([encoded,global_step]  # ,
                                                                 # feed_dict={keep_prob: args.dropout_frequency}
                                                             )
                     encoded_arrays.append(np.asarray(encoded_im))
-                np.save('{}_.npy'.format(args.image), encoded_arrays)
+                np.save('{}_{}_.npy'.format(args.image,args.image_name), encoded_arrays)
             except tf.errors.OutOfRangeError:
                 sys.stderr.write('Done')
             finally:
                 coord.request_stop()
-            np.save('{}_.npy'.format(args.image), encoded_arrays)
+            np.save('{}_{}_.npy'.format(args.image,args.image_name), encoded_arrays)
             coord.join(threads)
 
 
