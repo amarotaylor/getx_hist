@@ -107,13 +107,13 @@ def evaluate_image(args):
             try:
                 incr = 0
                 step = 0
-                _, _, decoded, encoded = sess.run([inference,global_step]  # ,
+                encoded_im = sess.run([encoded,global_step]  # ,
                                                                 # feed_dict={keep_prob: args.dropout_frequency}
                                                                 )
                 if len(encoded_arrays)> 1:
-                    encoded_arrays = np.concatenate([np.asarray(encoded),encoded_arrays])
+                    encoded_arrays = np.concatenate([np.asarray(encoded_im),encoded_arrays])
                 else:
-                    encoded_arrays = np.asarray(encoded)
+                    encoded_arrays = np.asarray(encoded_im)
 
 
             finally:
