@@ -65,11 +65,11 @@ def evaluate_image(args):
             raise
     #
     with tf.Graph().as_default(), tf.device('/cpu:0'):
-        input_pipes = inputs(args.image,
+        input_pipes = inputs(os.path.join(args.image, '*tfrecords'),
                              batch_size=args.batch_size,
                              num_epochs=num_epochs,
                              num_threads=args.input_threads,
-                             shuffle=False,
+                             shuffle=True,
                              dtype=set_dtype)
         images,flat_target = input_pipes
         batch_queue = tf.contrib.slim.prefetch_queue.prefetch_queue(
