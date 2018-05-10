@@ -119,6 +119,7 @@ def run_training(args):
             threads = tf.train.start_queue_runners(sess=sess, coord=coord)
             if RESTORE == True:
                 sys.stderr.write("Restoring Checkpoint\n")
+                restore_checkpoint(sess, saver, args.checkpoint_dir)
             try:
                 incr = 0
                 step = 0
