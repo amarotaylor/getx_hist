@@ -71,14 +71,12 @@ def inputs(file_regex, batch_size, num_epochs, num_threads=2, shuffle=True, dtyp
         num_epochs = None
     if mode=='Train':
         filenames = glob.glob(file_regex)
-    elif mode=='Eval':
-        filenames = file_regex
-        print filenames
+    print filenames
     with tf.name_scope('input'):
         min_after_dequeue = 200
         capacity = min_after_dequeue + ( num_threads + 3 ) * batch_size
         if shuffle:
-            filename_queue = tf.train.string_input_producer(filenames,num_epochs=num_epochs,shuffle=shuffle)
+            filename_queue = tf.train.string_input_producer(filenames,num_epochs=num_epochs,shuffle=True)
             example_list = [ read_and_decode(filename_queue, dtype=dtype)
                              for _ in range(num_threads) ]
             images = tf.train.shuffle_batch_join(
@@ -89,6 +87,7 @@ def inputs(file_regex, batch_size, num_epochs, num_threads=2, shuffle=True, dtyp
         else:
             filename_queue = tf.train.string_input_producer(filenames,num_epochs=num_epochs,shuffle=False)
             example_list = read_and_decode(filename_queue, dtype=dtype)
+            print example_list
             images = tf.train.batch(
                 example_list,
                 batch_size=batch_size,
