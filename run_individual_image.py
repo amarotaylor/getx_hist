@@ -66,7 +66,7 @@ def evaluate_image(args):
                              num_epochs=num_epochs,
                              num_threads=args.input_threads,
                              shuffle=False,
-                             dtype=set_dtype,mode='Eval')
+                             dtype=set_dtype,mode='Train')
         images,flat_target = input_pipes
         batch_queue = tf.contrib.slim.prefetch_queue.prefetch_queue(
             [images['image'],flat_target], capacity=2 * args.batch_size * args.num_gpus)
