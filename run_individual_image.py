@@ -9,11 +9,8 @@ import yaml
 from tf_model_functions import *
 
 parser = argparse.ArgumentParser(description='Train CNN for classification of variant selection.')
-parser.add_argument('--training_data', type=str, help='Directory containing training data in tfrecords format.')
 parser.add_argument('--checkpoint_dir', type=str, help='Directory where model checkpoints will be saved.')
 parser.add_argument('--epochs', '-e', default=1, type=int, help='Training epochs.')
-parser.add_argument('--dropout_frequency', '-d', default=0.50, type=float,
-                    help='Set frequency for dropout normalization during training.')
 parser.add_argument('--batch_size', '-b', default=200, type=int, help='Batch size for training.')
 parser.add_argument('--input_threads', '-p', default=2, type=int,
                     help='Number of input threads to use (must be 2 or more).')
@@ -43,8 +40,7 @@ def evaluate_image(args):
     num_epochs = args.epochs
     save_file = os.path.join(args.checkpoint_dir, 'my_model')
     set_dtype = tf.float32
-    adam_lr = args.learning_rate
-    adam_ep = args.epsilon
+
     # Make checkpoint dir if doesn't exist
     try:
         os.makedirs(args.checkpoint_dir)
@@ -65,12 +61,12 @@ def evaluate_image(args):
             raise
     #
     with tf.Graph().as_default(), tf.device('/cpu:0'):
-        input_pipes = inputs(os.path.join(args.image, '*tfrecords'),
+        input_pipes = inputs(args.image,
                              batch_size=args.batch_size,
                              num_epochs=num_epochs,
                              num_threads=args.input_threads,
                              shuffle=True,
-                             dtype=set_dtype)
+                             dtype=set_dtype,mode='Eval')
         images,flat_target = input_pipes
         batch_queue = tf.contrib.slim.prefetch_queue.prefetch_queue(
             [images['image'],flat_target], capacity=2 * args.batch_size * args.num_gpus)
@@ -105,21 +101,22 @@ def evaluate_image(args):
                 sys.stderr.write("Restoring Checkpoint\n")
                 restore_checkpoint(sess, saver, args.checkpoint_dir)
             try:
-                incr = 0
-                step = 0
-                encoded_im = sess.run([encoded,global_step]  # ,
+                while not coord.should_stop():
+                    incr = 0
+                    step = 0
+                    encoded_im = sess.run([encoded,global_step]  # ,
                                                                 # feed_dict={keep_prob: args.dropout_frequency}
                                                             )
-                print np.asarray(encoded_im)
                 if len(encoded_arrays)> 1:
                     encoded_arrays = np.concatenate([np.asarray(encoded_im),encoded_arrays])
                 else:
                     encoded_arrays = np.asarray(encoded_im)
 
-
+            except tf.errors.OutOfRangeError:
+                sys.stderr.write('Done')
             finally:
-                np.save('{}.npy'.format(args.image), encoded_arrays)
                 coord.request_stop()
+            np.save('{}.npy'.format(args.image), encoded_arrays)
             coord.join(threads)
 
 

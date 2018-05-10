@@ -66,10 +66,13 @@ def decode(serialized_example, height=100, width=100, dtype = tf.float32):
 
 
 
-def inputs(file_regex, batch_size, num_epochs, num_threads=2, shuffle=True, dtype=tf.float32):
+def inputs(file_regex, batch_size, num_epochs, num_threads=2, shuffle=True, dtype=tf.float32, mode='Train'):
     if not num_epochs:
         num_epochs = None
-    filenames = glob.glob(file_regex)
+    if mode=='Train':
+        filenames = glob.glob(file_regex)
+    elif mode=='Eval':
+        filenames = file_regex
     with tf.name_scope('input'):
         min_after_dequeue = 200
         capacity = min_after_dequeue + ( num_threads + 3 ) * batch_size
