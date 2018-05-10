@@ -61,7 +61,7 @@ def evaluate_image(args):
             raise
     #
     with tf.Graph().as_default(), tf.device('/cpu:0'):
-        input_pipes = inputs(os.path.join(args.training_data, '*tfrecords'),
+        input_pipes = inputs(os.path.join(args.image, '*tfrecords'),
                              batch_size=args.batch_size,
                              num_epochs=num_epochs,
                              num_threads=args.input_threads,
