@@ -109,7 +109,8 @@ def evaluate_image(args):
                 step = 0
                 encoded_im = sess.run([encoded,global_step]  # ,
                                                                 # feed_dict={keep_prob: args.dropout_frequency}
-                                                                )
+                                                            )
+                print np.asarray(encoded_im)
                 if len(encoded_arrays)> 1:
                     encoded_arrays = np.concatenate([np.asarray(encoded_im),encoded_arrays])
                 else:
