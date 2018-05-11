@@ -237,7 +237,7 @@ class layer_maker:
                 variable_summaries(self.mn)
                 variable_summaries(self.sd)
 
-        assert l_info['type'] in ['conv','incept','deconv','fc','dropout','flatten','maxpool', 'variational']
+        assert l_info['type'] in ['conv','incept','deconv','fc','dropout','flatten','maxpool', 'variational','batchnorm','reshape']
 
         if l_info['type'] == 'conv':
             try:
