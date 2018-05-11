@@ -207,10 +207,14 @@ class layer_maker:
                                         padding=padding, data_format=format)
         return layer
 
-    def fully_connected(self,x, u, name, activation = tf.nn.leaky_relu):
+    def fully_connected(self,x, u, name, activation = tf.nn.leaky_relu, sparse = False):
         ''' wrapper for tf.layers.dense'''
-        layer = tf.layers.dense(x, units = u,activation = activation,
+        if not sparse:
+            layer = tf.layers.dense(x, units = u,activation = activation,
                                  name=name)
+        else:
+            layer = tf.layers.dense(x, units=u, activation=activation,
+                                    name=name, activity_regularizer= tf.contrib.layers.l1_regularizer(0.01), k_regularizer = tf.contrib.layers.l2_regularizer(0.001))
         return layer
 
     def sampling(self,z_mean, z_log_var):
@@ -256,9 +260,15 @@ class layer_maker:
                                     k = l_info['kernel_size'],name=layer_id, stride=l_info['stride'],padding='same')
             out_chn = l_info['filters']
         elif l_info['type'] == 'fc':
+            try:
+                l_info['shrink']
+                if l_info['shrink'] == True:
+                    self.get_regularizer_loss = True
+            except KeyError:
+                l_info['shrink'] = False
             with tf.variable_scope(layer_id, reuse=tf.AUTO_REUSE):
                 layer = self.fully_connected(self.in_tensor, l_info['units'], name = layer_id,
-                                         activation = tf.nn.leaky_relu)
+                                         activation = tf.nn.leaky_relu,sparse =l_info['shrink'])
             out_chn = l_info['units']
         elif l_info['type'] == 'flatten':
 

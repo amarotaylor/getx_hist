@@ -93,7 +93,7 @@ def run_training(args):
                         else:
                             _,_,decoded,_ = inference(image_batch, nn_arch, batch_size=args.batch_size,
                                                 dtype=set_dtype, training=True)
-                            loss_op = img_loss(y_hat = decoded, targets_flat=target_batch)
+                            loss_op = img_loss(y_hat = decoded, targets_flat=target_batch) + tf.losses.get_regularization_loss()
                         for i in xrange(0,4):
                             tf.summary.image("reconstruction_{}".format(i), tf.reshape(decoded[i,:],[-1,100,100,3]))
                             tf.summary.image("source_{}".format(i),
