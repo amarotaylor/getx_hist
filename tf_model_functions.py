@@ -293,6 +293,9 @@ class layer_maker:
         elif l_info['type'] == 'batchnorm':
                 layer = tf.layers.batch_normalization(self.in_tensor, training=self.training)
                 out_chn = self.in_chn
+        elif l_info['type'] == 'reshape':
+                layer = tf.reshape(self.in_tensor,[self.batch_size,l_info['width'],l_info['width'],-1])
+                out_chn = layer.get_shape()[3]
 
         self.in_tensor = layer
         self.in_chn = out_chn
