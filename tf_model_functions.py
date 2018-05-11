@@ -209,12 +209,12 @@ class layer_maker:
 
     def fully_connected(self,x, u, name, activation = tf.nn.leaky_relu, sparse = False):
         ''' wrapper for tf.layers.dense'''
-        if not sparse:
+        if sparse == False:
             layer = tf.layers.dense(x, units = u,activation = activation,
                                  name=name)
         else:
             layer = tf.layers.dense(x, units=u, activation=activation,
-                                    name=name, activity_regularizer= tf.contrib.layers.l1_regularizer(0.01), k_regularizer = tf.contrib.layers.l2_regularizer(0.001))
+                                    name=name, activity_regularizer= tf.contrib.layers.l1_regularizer(0.01), kernel_regularizer = tf.contrib.layers.l2_regularizer(0.001))
         return layer
 
     def sampling(self,z_mean, z_log_var):
@@ -262,14 +262,15 @@ class layer_maker:
         elif l_info['type'] == 'fc':
             try:
                 l_info['shrink']
-                if l_info['shrink'] == True:
-                    self.get_regularizer_loss = True
+                self.get_regularizer_loss = True
+                l_info['shrink'] = True
             except KeyError:
                 l_info['shrink'] = False
             with tf.variable_scope(layer_id, reuse=tf.AUTO_REUSE):
                 layer = self.fully_connected(self.in_tensor, l_info['units'], name = layer_id,
                                          activation = tf.nn.leaky_relu,sparse =l_info['shrink'])
             out_chn = l_info['units']
+
         elif l_info['type'] == 'flatten':
 
             with tf.variable_scope(layer_id, reuse=tf.AUTO_REUSE):
@@ -288,6 +289,11 @@ class layer_maker:
                 layer = self.max_pool_2d(self.in_tensor,p = l_info['pool'], name=layer_id,
                                     stride=l_info['stride'], format='channels_last', padding='same')
                 out_chn = self.in_chn
+
+        elif l_info['type'] == 'batchnorm':
+                layer = tf.layers.batch_normalization(self.in_tensor, training=self.training)
+                out_chn = self.in_chn
+
         self.in_tensor = layer
         self.in_chn = out_chn
         self.in_width = layer.get_shape()[1]

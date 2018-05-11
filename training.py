@@ -93,7 +93,7 @@ def run_training(args):
                         else:
                             _,_,decoded,_ = inference(image_batch, nn_arch, batch_size=args.batch_size,
                                                 dtype=set_dtype, training=True)
-                            loss_op = img_loss(y_hat = decoded, targets_flat=target_batch) + tf.losses.get_regularization_loss()
+                            loss_op = (img_loss(y_hat = decoded, targets_flat=target_batch)/255*3) + tf.losses.get_regularization_loss()
                         for i in xrange(0,4):
                             tf.summary.image("reconstruction_{}".format(i), tf.reshape(decoded[i,:],[-1,100,100,3]))
                             tf.summary.image("source_{}".format(i),
@@ -106,7 +106,9 @@ def run_training(args):
         for grad, var in grads:
             if grad is not None:
                 summaries.append(tf.summary.histogram(var.op.name + '/gradients', grad))
-        train_op = optimizer.apply_gradients(grads, global_step=global_step)
+        update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
+        with tf.control_dependencies(update_ops):
+            train_op = optimizer.apply_gradients(grads, global_step=global_step)
         summary_op = tf.summary.merge_all()
         init_op = tf.group(tf.global_variables_initializer(),
                            tf.local_variables_initializer())
@@ -130,7 +132,7 @@ def run_training(args):
                     if ((step % 500) == 498) and (args.collect_run_metadata):
                         run_options = tf.RunOptions(trace_level=tf.RunOptions.FULL_TRACE)
                         run_metadata = tf.RunMetadata()
-                        _, loss_value, summary, step = sess.run([train_op, loss_op, summary_op, global_step],
+                        _, loss_value, summary, step = sess.run([train_op,update_ops, loss_op, summary_op, global_step],
                                                                 # feed_dict={keep_prob: args.dropout_frequency},
                                                                 options=run_options,
                                                                 run_metadata=run_metadata)
