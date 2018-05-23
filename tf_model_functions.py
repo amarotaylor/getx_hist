@@ -220,7 +220,7 @@ class layer_maker:
     def fully_connected(self,x, u, name, activation = tf.nn.leaky_relu, sparse = False):
         ''' wrapper for tf.layers.dense'''
         layer = tf.contrib.layers.fully_connected(x, u,activation_fn = activation,
-                                    scope=name,normalizer_fn= tf.nn.batch_normalization, weights_regularizer = tf.contrib.layers.l2_regularizer(0.001))
+                                    scope=name , weights_regularizer = tf.contrib.layers.l2_regularizer(0.001))
 
         return layer
 
@@ -324,7 +324,7 @@ def inference(images, nn_architecture,batch_size, dtype=tf.float32, training=Tru
     #print images.shape
     in_tensor = images
     in_chn = 3
-    in_width = 100
+    in_width = images.shape[1]
     #print in_tensor.shape
     builder = layer_maker(in_tensor, in_chn, in_width, dtype=dtype, training=training, batch_size = batch_size, hidden=latent_params)
     with tf.name_scope("autoencoder"):
