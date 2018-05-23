@@ -219,7 +219,7 @@ class layer_maker:
 
     def fully_connected(self,x, u, name, activation = tf.nn.leaky_relu, sparse = False):
         ''' wrapper for tf.layers.dense'''
-        layer = tf.contrib.layers.fully_connected(x, units=u, activation=activation,
+        layer = tf.contrib.layers.fully_connected(x, u, activation=activation,
                                     name=name,normalizer_fn='batch_norm', weights_regularizer = tf.contrib.layers.l2_regularizer(0.001))
 
         return layer
