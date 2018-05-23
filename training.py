@@ -26,7 +26,7 @@ parser.add_argument('--collect_run_metadata', '-m', action='store_true',
 parser.add_argument('--nn_architecture', '-nn_a', type=str, help="YAML file containing nn_architecture specs.")
 parser.add_argument('--learning_rate',default=0.01, type=float)
 parser.add_argument('--epsilon',default = 1e-8, type = float)
-parser.add_argument('--variational', default = False, help='if variational true use KL divergence + reconstruction loss')
+parser.add_argument('--variational',action='store_true', default = False, help='if variational true use KL divergence + reconstruction loss')
 parser.add_argument('--variational_hidden_units', default=100, help='number of variational parameters')
 
 args = parser.parse_args()
