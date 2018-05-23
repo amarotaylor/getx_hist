@@ -73,7 +73,6 @@ def inputs(file_regex, batch_size, num_epochs, num_threads=2, shuffle=True, dtyp
         num_epochs = None
     if mode=='Train':
         filenames = glob.glob(file_regex)
-    print filenames
     with tf.name_scope('input'):
         min_after_dequeue = 200
         capacity = min_after_dequeue + ( num_threads + 3 ) * batch_size
@@ -89,7 +88,6 @@ def inputs(file_regex, batch_size, num_epochs, num_threads=2, shuffle=True, dtyp
         else:
             filename_queue = tf.train.string_input_producer(filenames,num_epochs=num_epochs,shuffle=False)
             example_list = read_and_decode(filename_queue, dtype=dtype)
-            print example_list
             images = tf.train.batch(
                 example_list,
                 batch_size=batch_size,
@@ -222,7 +220,7 @@ class layer_maker:
     def fully_connected(self,x, u, name, activation = tf.nn.leaky_relu, sparse = False):
         ''' wrapper for tf.layers.dense'''
         layer = tf.contrib.layers.fully_connected(x, units=u, activation=activation,
-                                    name=name,normalizer_fn=tf.contrib.layers.batch_norm(), weights_regularizer = tf.contrib.layers.l2_regularizer(0.001))
+                                    name=name,normalizer_fn='batch_norm', weights_regularizer = tf.contrib.layers.l2_regularizer(0.001))
 
         return layer
 
