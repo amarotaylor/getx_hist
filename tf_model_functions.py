@@ -6,7 +6,7 @@ import sys
 import glob
 import math
 import yaml
-
+from collections import namedtuple
 
 # example yaml file :
 ## YAML structure
@@ -62,6 +62,8 @@ def decode(serialized_example, height=100, width=100, dtype = tf.float32):
     processed_example = tf.image.resize_image_with_crop_or_pad(image=image,
                                                                target_height=height,
                                                                target_width=width)
+    processed_example = tf.image.random_flip_left_right(processed_example)
+    processed_example = tf.random_crop(processed_example,[20,20,3])
     return tf.cast(processed_example, dtype= dtype)
 
 
@@ -94,7 +96,7 @@ def inputs(file_regex, batch_size, num_epochs, num_threads=2, shuffle=True, dtyp
                 num_threads=num_threads,
                 capacity=capacity,
                 allow_smaller_final_batch=True)
-        flat_targets = tf.reshape(images['image'],[-1,100*100*3])
+        flat_targets = tf.reshape(images['image'],[-1,20*20*3])
         return images, flat_targets
 
 
@@ -150,6 +152,11 @@ def average_gradients(tower_grads):
         average_grads.append(grad_and_var)
     return average_grads
 
+def log_likelihood_gaussian(x, mu, sigma_square):
+    return tf.reduce_sum(-0.5 * tf.log(2.0 * np.pi) - 0.5 * tf.log(sigma_square) -
+                         (x - mu) ** 2 / (2.0 * sigma_square), 1)
+
+
 def training(loss, learning_rate):
     with tf.name_scope('train'):
         optimizer = tf.train.AdamOptimizer(learning_rate)
@@ -166,11 +173,12 @@ def img_loss(y_hat, targets_flat,scale_factor = 100*100*3):
                          2)
 
 # kl divergence from standard normal
-def kl_loss(sd,mn):
+def kl_loss(sd,mu):
     with tf.name_scope('kl_loss'):
-        return -0.5 * tf.reduce_sum(1 + sd
-                                           - tf.square(mn)
-                                           - tf.exp(sd), 1)
+        return 0.5 * tf.reduce_sum(mu ** 2 +
+                            sd -
+                            tf.log(sd) - 1,
+                            reduction_indices=1)
 
 class layer_maker:
     def __init__(self,in_tensor,in_chn,in_width,batch_size,dtype=tf.float32,training=True,dformat='channels_last', hidden = 1000):
@@ -186,6 +194,10 @@ class layer_maker:
         self.mn = []
         self.sd = []
         self.encoded = []
+        self.MAX_SIGMA_SQUARE = 1e10
+        self.EPS = 1e-6
+        self.LocationScale = namedtuple('LocationScale', ['mu', 'sigma_square'])
+
     def conv2d(self,x, f, k, name, stride=1, padding='same', format='channels_last',activation = tf.nn.leaky_relu):
         ''' wrapper for tf.layers.conv2d'''
         layer = tf.layers.conv2d(x, filters=f, kernel_size=k, strides=stride, padding=padding,
@@ -209,18 +221,16 @@ class layer_maker:
 
     def fully_connected(self,x, u, name, activation = tf.nn.leaky_relu, sparse = False):
         ''' wrapper for tf.layers.dense'''
-        if sparse == False:
-            layer = tf.layers.dense(x, units = u,activation = activation,
-                                 name=name)
-        else:
-            layer = tf.layers.dense(x, units=u, activation=activation,
-                                    name=name, activity_regularizer= tf.contrib.layers.l1_regularizer(0.01), kernel_regularizer = tf.contrib.layers.l2_regularizer(0.001))
+        layer = tf.contrib.layers.fully_connected(x, units=u, activation=activation,
+                                    name=name,normalizer_fn=tf.contrib.layers.batch_norm(), weights_regularizer = tf.contrib.layers.l2_regularizer(0.001))
+
         return layer
 
-    def sampling(self,z_mean, z_log_var):
+    def sampling(self,latent_parameter):
         epsilon = tf.random_normal([self.batch_size,self.hidden], 0, 1,
                                dtype=tf.float32)
-        return tf.add(z_mean, tf.multiply(tf.sqrt(tf.exp(z_log_var)), epsilon))
+        return tf.add(latent_parameter.mu,
+                      tf.sqrt(latent_parameter.sigma_square) * epsilon, name='latent_z')
 
     def make_layer(self,l_info,l_index,last=False):
         ''' uses YAML file to generate layers '''
@@ -230,12 +240,16 @@ class layer_maker:
 
         if l_info['type'] == 'variational':
             with tf.variable_scope(layer_id, reuse=tf.AUTO_REUSE):
-                self.mn = tf.layers.dense(self.in_tensor, units=self.hidden, activation=tf.nn.relu, name='encode_mean')
-                self.sd = tf.layers.dense(self.in_tensor, units=self.hidden, activation=tf.nn.relu, name='encode_sd')
-                layer = self.sampling(self.mn, self.sd)
+                mu = tf.layers.dense(self.in_tensor, units=self.hidden, activation=tf.nn.relu, name='encoder_mean')
+                sigma_square = tf.layers.dense(self.in_tensor, units=self.hidden, activation=tf.nn.relu, name='encoder_sigma')
+                self.latent_parameter = \
+                    self.LocationScale(mu, tf.clip_by_value(tf.nn.softplus(sigma_square),
+                                                            self.EPS, self.MAX_SIGMA_SQUARE))
+                layer = self.sampling(self.latent_parameter)
                 out_chn = self.hidden
-                variable_summaries(self.mn)
-                variable_summaries(self.sd)
+                variable_summaries(mu)
+                variable_summaries(sigma_square)
+
 
         assert l_info['type'] in ['conv','incept','deconv','fc','dropout','flatten','maxpool', 'variational','batchnorm','reshape']
 
@@ -319,4 +333,4 @@ def inference(images, nn_architecture,batch_size, dtype=tf.float32, training=Tru
         for layer_index in range(len(nn_architecture.keys())):
             l_info = nn_architecture['layer{}'.format(layer_index)]
             builder.make_layer(l_info,layer_index)
-        return builder.sd,builder.mn,builder.in_tensor,builder.encoded
+        return builder.latent_parameter,builder.in_tensor,builder.encoded

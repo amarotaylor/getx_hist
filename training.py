@@ -44,6 +44,7 @@ def run_training(args):
     set_dtype = tf.float32
     adam_lr = args.learning_rate
     adam_ep = args.epsilon
+
     # Make checkpoint dir if doesn't exist
     try:
         os.makedirs(args.checkpoint_dir)
@@ -86,10 +87,13 @@ def run_training(args):
                         image_batch, target_batch = batch_queue.dequeue()
 
                         if args.variational == True:
-                            sd, mn, decoded,_ = inference(image_batch, nn_arch,batch_size=args.batch_size,
+                            latent, decoded,_ = inference(image_batch, nn_arch,batch_size=args.batch_size,
                                                     dtype=set_dtype, training=True, latent_params = args.variational_hidden_units)
-                            loss_op = tf.reduce_mean(
-                                img_loss(y_hat=decoded, targets_flat=target_batch) + kl_loss(sd=sd, mn=mn))
+                            reconstruction_loss = tf.reduce_mean(img_loss(y_hat=decoded, targets_flat=target_batch))
+                            kl_divergence = tf.reduce_mean(kl_loss(latent.sigma_square,latent.mu))
+                            tf.losses.add_loss(reconstruction_loss)
+                            tf.losses.add_loss(kl_divergence)
+                            loss_op = tf.losses.get_total_loss(add_regularization_losses=True)
                         else:
                             _,_,decoded,_ = inference(image_batch, nn_arch, batch_size=args.batch_size,
                                                 dtype=set_dtype, training=True)
@@ -97,13 +101,24 @@ def run_training(args):
 
                             loss_op = tf.losses.get_total_loss(add_regularization_losses=True)
                         for i in xrange(0,4):
-                            tf.summary.image("reconstruction_{}".format(i), tf.reshape(decoded[i,:],[-1,100,100,3]))
+                            tf.summary.image("reconstruction_{}".format(i), tf.reshape(decoded[i,:],[-1,20,20,3]))
                             tf.summary.image("source_{}".format(i),
-                                             tf.reshape(target_batch[i, :], [-1, 100, 100, 3]))
+                                             tf.reshape(target_batch[i, :], [-1, 20, 20, 3]))
                         variable_summaries(loss_op)
                         summaries = tf.get_collection(tf.GraphKeys.SUMMARIES, scope)
-                        grads = optimizer.compute_gradients(loss_op)
-                        tower_grads.append(grads)
+                        trainable_variable = tf.get_collection('trainable_variables')
+                        grad_and_var = optimizer.compute_gradients(loss_op, trainable_variable)
+                        grad_and_var = [(grad, var) for grad, var in grad_and_var if grad is not None]
+                        grad, var = zip(*grad_and_var)
+                        clip_value = 3.0
+                        clip_norm = 10.0
+                        grad, global_grad_norm = tf.clip_by_global_norm(grad, clip_norm=clip_norm)
+                        grad_clipped_and_var = [(tf.clip_by_value(grad[i], -clip_value * 0.1, clip_value * 0.1), var[i])
+                                                if 'encoder_sigma' in var[i].name
+                                                else (tf.clip_by_value(grad[i], -clip_value, clip_value), var[i])
+                                                for i in range(len(grad_and_var))]
+                        #grads = optimizer.compute_gradients(loss_op)
+                        tower_grads.append(grad_clipped_and_var)
         grads = average_gradients(tower_grads)
         for grad, var in grads:
             if grad is not None:
