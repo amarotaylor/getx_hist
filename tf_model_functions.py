@@ -228,7 +228,7 @@ class layer_maker:
         epsilon = tf.random_normal([self.batch_size,self.hidden], 0, 1,
                                dtype=tf.float32)
         return tf.add(latent_parameter.mu,
-                      tf.sqrt(latent_parameter.sigma_square) * epsilon, name='latent_z')
+                      tf.sqrt(latent_parameter.sigma_square) * epsilon)
 
     def make_layer(self,l_info,l_index,last=False):
         ''' uses YAML file to generate layers '''
@@ -237,16 +237,27 @@ class layer_maker:
         data_format = self.dformat
 
         if l_info['type'] == 'variational':
+            with tf.variable_scope(layer_id+'_mean', reuse=tf.AUTO_REUSE):
+                mu = tf.contrib.layers.fully_connected(self.in_tensor,
+                                                       self.hidden,
+                                                       activation=tf.nn.relu,
+                                                       scope=layer_id+'_mean',
+                                                       weights_regularizer = tf.contrib.layers.l2_regularizer(0.001))
+            with tf.variable_scope(layer_id+'_sigma_square',reuse=tf.AUTO_REUSE):
+                sigma_square = tf.contrib.layers.fully_connected(self.in_tensor,
+                                               self.hidden, activation=tf.nn.relu,
+                                               scope=layer_id+'_sigma_square',
+
+                                               weights_regularizer=tf.contrib.layers.l2_regularizer(0.001))
             with tf.variable_scope(layer_id, reuse=tf.AUTO_REUSE):
-                mu = tf.layers.dense(self.in_tensor, units=self.hidden, activation=tf.nn.relu, name='encoder_mean')
-                sigma_square = tf.layers.dense(self.in_tensor, units=self.hidden, activation=tf.nn.relu, name='encoder_sigma')
+
                 self.latent_parameter = \
                     self.LocationScale(mu, tf.clip_by_value(tf.nn.softplus(sigma_square),
                                                             self.EPS, self.MAX_SIGMA_SQUARE))
                 layer = self.sampling(self.latent_parameter)
-                out_chn = self.hidden
-                variable_summaries(mu)
-                variable_summaries(sigma_square)
+            out_chn = self.hidden
+            variable_summaries(mu)
+            variable_summaries(sigma_square)
 
 
         assert l_info['type'] in ['conv','incept','deconv','fc','dropout','flatten','maxpool', 'variational','batchnorm','reshape']
