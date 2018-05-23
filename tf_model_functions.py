@@ -187,7 +187,7 @@ class layer_maker:
         self.training = training
         self.dtype = dtype
         self.dformat = dformat
-        self.hidden = hidden
+        self.hidden = int(hidden)
         self.batch_size = batch_size
         self.mn = []
         self.sd = []
